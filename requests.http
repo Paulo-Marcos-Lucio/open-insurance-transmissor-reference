@@ -1,0 +1,25 @@
+### open-insurance-transmissor-reference — REST Client requests
+
+@host = http://localhost:8083
+
+### 1) Lista apólices do CPF seed 1 (paginada)
+
+GET {{host}}/open-insurance/insurance-policies/v1/policies?documentType=CPF&document=12345678901&page=1&page-size=10
+
+> {% client.global.set("policyId", response.body.data[0].policyId); %}
+
+### 2) Detalhe da primeira apólice retornada
+
+GET {{host}}/open-insurance/insurance-policies/v1/policies/{{policyId}}
+
+### 3) Lista de outro CPF seed (categoria diferente)
+
+GET {{host}}/open-insurance/insurance-policies/v1/policies?documentType=CPF&document=98765432109&page=1&page-size=5
+
+### 4) Apólice inexistente — esperado 404 POLICY_NOT_FOUND
+
+GET {{host}}/open-insurance/insurance-policies/v1/policies/00000000-0000-0000-0000-000000000000
+
+### 5) Health check
+
+GET {{host}}/actuator/health

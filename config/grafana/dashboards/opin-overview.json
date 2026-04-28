@@ -1,0 +1,108 @@
+{
+  "title": "Open Insurance — Operations Overview",
+  "uid": "opin-overview",
+  "tags": ["open-insurance", "transmissor", "overview"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Policies looked up / sec",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "sum(rate(opin_audit_events_total{kind=\"POLICY_LOOKUP_HIT\"}[1m]))" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops", "decimals": 2 } }
+    },
+    {
+      "type": "stat",
+      "title": "List requests / sec",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        { "expr": "sum(rate(opin_audit_events_total{kind=\"POLICY_LIST_REQUESTED\"}[1m]))" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops", "decimals": 2 } }
+    },
+    {
+      "type": "stat",
+      "title": "Lookup miss / sec",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "sum(rate(opin_audit_events_total{kind=\"POLICY_LOOKUP_MISS\"}[1m]))" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ops", "decimals": 3,
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 0.5 }
+          ]}
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "HTTP p99 latency",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{uri=~\"/open-insurance/.*\"}[5m])) by (le))"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3 } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Audit events by kind",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+      "targets": [
+        {
+          "expr": "sum by (kind) (rate(opin_audit_events_total[1m]))",
+          "legendFormat": "{{kind}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP requests by URI",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
+      "targets": [
+        {
+          "expr": "sum by (uri, status) (rate(http_server_requests_seconds_count{uri=~\"/open-insurance/.*\"}[1m]))",
+          "legendFormat": "{{uri}} ({{status}})"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency p50/p95/p99 by endpoint",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 14 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, uri) (rate(http_server_requests_seconds_bucket{uri=~\"/open-insurance/.*\"}[5m])))",
+          "legendFormat": "p50 {{uri}}"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{uri=~\"/open-insurance/.*\"}[5m])))",
+          "legendFormat": "p95 {{uri}}"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le, uri) (rate(http_server_requests_seconds_bucket{uri=~\"/open-insurance/.*\"}[5m])))",
+          "legendFormat": "p99 {{uri}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3 } }
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: open-insurance-transmissor-reference
+  profiles:
+    active: local
+  threads:
+    virtual:
+      enabled: true
+  cache:
+    type: caffeine
+
+server:
+  port: 8083
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
+
+opin:
+  transmissor:
+    organisation-id: 33333333-3333-3333-3333-333333333333
+    brand-name: "Seguradora Demo S/A"
+  pagination:
+    default-page-size: 25
+    max-page-size: 100
+  seed:
+    enabled: true
+    policies-count: 50
+  mtls:
+    enabled: false
