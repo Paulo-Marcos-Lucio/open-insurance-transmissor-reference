@@ -60,6 +60,13 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
+        <!-- DPoP / FAPI: JOSE/JWT primitives for sender-constrained tokens (RFC 9449) -->
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>9.47</version>
+        </dependency>
+
         <!-- Resilience -->
         <dependency>
             <groupId>io.github.resilience4j</groupId>
