@@ -160,6 +160,27 @@ opin:
     bundle-name: opin-prod
 ```
 
+## Test Coverage & API Docs
+
+| Categoria | Tests |
+|---|---|
+| Unit (incl. ArchUnit + 8 DPoPValidatorTest) | 15 |
+| Integration (PoliciesIT + FapiE2EIT) | 6 |
+| **Total** | **21** |
+
+JaCoCo coverage report gerado em `target/site/jacoco/index.html` após `./mvnw verify`.
+
+**API Documentation** (live com a app rodando em `http://localhost:8083`):
+- Swagger UI: <http://localhost:8083/swagger-ui.html>
+- OpenAPI 3 spec (JSON): <http://localhost:8083/v3/api-docs>
+- Geração offline do spec:
+  ```bash
+  ./mvnw spring-boot:run    # em outro terminal
+  curl http://localhost:8083/v3/api-docs > docs/openapi.json
+  ```
+
+Quando rodando com profile `fapi`, os endpoints `/open-insurance/insurance-policies/**` exigem `Authorization: DPoP` + header `DPoP` — Swagger UI vai precisar de um proof JWT válido pra exercitar (use o `DPoPHelper` de teste como template).
+
 ## Roadmap
 
 - [x] v0.1.0 — Phase 2 Insurance Policies (list + detail) + seed + hexagonal + observability
