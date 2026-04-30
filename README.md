@@ -34,7 +34,7 @@ Faz parte da **Suíte de Referência Regulatória BR** mantida ao lado de:
 - [`pix-nfc-reference`](https://github.com/Paulo-Marcos-Lucio/pix-nfc-reference) — Pix por aproximação (NFC)
 - [`open-finance-payments-reference`](https://github.com/Paulo-Marcos-Lucio/open-finance-payments-reference) — Iniciador de Pagamento (PISP) Open Finance
 
-## O que está aqui (v0.1.0 — MVP)
+## O que está aqui (v0.2.0 — FAPI 2.0 + DPoP)
 
 - **Endpoints transmissora-side (Phase 2 — Insurance Policies):**
   - `GET /open-insurance/insurance-policies/v1/policies` — lista paginada por CPF/CNPJ
@@ -94,6 +94,51 @@ Camadas (validadas por **ArchUnit**):
 | **Pagination com meta + links** | `InsurancePoliciesController.buildLinks()` | Padrão Susep — clientes paginarem corretamente |
 | **Seed loader pra demo** | `PolicySeedLoader` (`CommandLineRunner`) | Repo clonado roda com dados de exemplo, sem precisar setup |
 | **Hexagonal estrito + ArchUnit** | `HexagonalArchitectureTest` | CI bloqueia regressão de fronteira |
+| **DPoP RFC 9449 sender-constrained tokens** | `DPoPValidator`, `AccessTokenIntrospector`, `DPoPAuthenticationFilter` | Token roubado de outra máquina é rejeitado pelo `cnf.jkt` mismatch — segue o profile FAPI 2.0 que o OPIN herdará |
+
+## FAPI 2.0 + DPoP (RFC 9449)
+
+A v0.2.0 ativa um perfil `fapi` que protege os endpoints `/open-insurance/insurance-policies/**` com **DPoP sender-constrained access tokens** — o padrão que o profile Open Insurance Brasil herda do FAPI 2.0.
+
+```bash
+SPRING_PROFILES_ACTIVE=local,fapi make run
+```
+
+Wire-protocol esperado pelo receiver:
+
+```http
+POST /mock-auth/token                      # auth server in-process
+DPoP: <proof JWT assinado pela chave do receiver>
+X-Client-Id: demo-receiver
+→ { "access_token": "...", "token_type": "DPoP", "expires_in": 600, "scope": "insurance-policies" }
+
+GET /open-insurance/insurance-policies/v1/policies?documentType=CPF&document=...
+Authorization: DPoP <access_token>         # carrega cnf.jkt = thumbprint da chave do receiver
+DPoP: <proof JWT fresco pra esta requisição>
+→ 200 OK + payload Phase 2
+```
+
+Validações enforced pelo `DPoPValidator`:
+
+| Validação | Como | Falha → |
+|---|---|---|
+| `typ` header = `dpop+jwt` | parse JWS header | 401 `invalid_dpop_proof` |
+| Algorithm em `{ES256, RS256, PS256}` | parse JWS header | 401 `invalid_dpop_proof` |
+| `jwk` header presente e público | parse JWS header | 401 `invalid_dpop_proof` |
+| Signature verifica sob a `jwk` embutida | nimbus-jose-jwt | 401 `invalid_dpop_proof` |
+| `htm` claim bate com método HTTP (case-insensitive) | claim check | 401 `invalid_dpop_proof` |
+| `htu` claim bate com URL canonicalizada (sem query/fragment) | claim check | 401 `invalid_dpop_proof` |
+| `iat` dentro de ±60s | claim check | 401 `invalid_dpop_proof` |
+| `jti` único no `DPoPNonceCache` (Caffeine TTL 2min) | anti-replay | 401 `invalid_dpop_proof` |
+| Thumbprint da `jwk` == `cnf.jkt` do access token | binding | 401 `invalid_token` |
+
+11 testes cobrem o validador isoladamente (8 unit em `DPoPValidatorTest`) e o flow E2E ponta-a-ponta (3 IT em `FapiE2EIT` — token issuance, request sem headers, replay attack com chave diferente).
+
+**Não-objetivos da v0.2.0** (próximas releases):
+
+- private_key_jwt assertion no token endpoint (RFC 7523) — v0.3.0 com FAPI-CIBA + DCR
+- Fetch real do JWKS do auth server com cache TTL (hoje é in-process pra IT)
+- JWS detached signature nos payloads das responses (RFC 7515 + ICP-Brasil cert)
 
 ## Configuração
 
@@ -118,10 +163,11 @@ opin:
 ## Roadmap
 
 - [x] v0.1.0 — Phase 2 Insurance Policies (list + detail) + seed + hexagonal + observability
-- [ ] **v0.2.0 — FAPI-CIBA + DCR (Dynamic Client Registration)** *(prioridade)*
-- [ ] v0.3.0 — Endpoints adicionais Phase 2 — Claim Notifications, Premium history, General info
-- [ ] v0.4.0 — Phase 3 — Resources, Customers, Pets/Auto/Home product catalogs
-- [ ] v0.5.0 — Persistência durável (Postgres com partitioning por categoria)
+- [x] **v0.2.0 — FAPI 2.0 + DPoP RFC 9449** sender-constrained tokens · mock auth in-process · 11 testes
+- [ ] **v0.3.0 — FAPI-CIBA + DCR (Dynamic Client Registration) + private_key_jwt** *(próximo)*
+- [ ] v0.4.0 — Endpoints adicionais Phase 2 — Claim Notifications, Premium history, General info
+- [ ] v0.5.0 — Phase 3 — Resources, Customers, Pets/Auto/Home product catalogs
+- [ ] v0.6.0 — Persistência durável (Postgres com partitioning por categoria)
 - [ ] JWS detached signature em payloads (RFC 7515 + ICP-Brasil cert)
 - [ ] Conformance test contra a suite oficial do Open Insurance Brasil
 
