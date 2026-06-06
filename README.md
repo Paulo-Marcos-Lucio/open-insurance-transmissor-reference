@@ -7,12 +7,12 @@
 > Susep, hexagonal validada por ArchUnit, observabilidade end-to-end, mTLS-ready
 > (ICP-Brasil) com roadmap explícito pra FAPI-CIBA + DCR + JWS detached em v0.2.0+.
 >
-> Java 21 · Spring Boot 3.4 · Hexagonal · OpenTelemetry · Grafana
+> Java 21 · Spring Boot 4.0 · Hexagonal · OpenTelemetry · Grafana
 
 [![CI](https://github.com/Paulo-Marcos-Lucio/open-insurance-transmissor-reference/actions/workflows/ci.yml/badge.svg)](https://github.com/Paulo-Marcos-Lucio/open-insurance-transmissor-reference/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java 21](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
-[![Spring Boot 3.4](https://img.shields.io/badge/Spring%20Boot-3.4-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Spring Boot 4.0](https://img.shields.io/badge/Spring%20Boot-4.0-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 
 ---
 

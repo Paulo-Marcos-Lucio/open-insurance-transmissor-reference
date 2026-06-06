@@ -6,6 +6,22 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Unreleased]
 
+### Changed — Manutenção junho/2026
+
+- **Migração para Spring Boot 4.0.6** (Spring Framework 7, Jakarta EE 11/Tomcat 11, Jackson 3 default)
+  - `WebSecurityConfig`: `securityMatcher(new AntPathRequestMatcher(...))` → `securityMatcher("/open-insurance/insurance-policies/**")` (Spring Security 7 removeu `AntPathRequestMatcher`; o overload de `String` agora usa `PathPattern`)
+  - IT: `RestTemplateBuilder` (movido em Boot 4 e não mais transitivo do starter-web) → `new RestTemplate()` direto do spring-web
+- **springdoc-openapi** 2.7.0 → 3.0.3 (obrigatório com Boot 4)
+- **nimbus-jose-jwt** 9.47 → 10.9.1
+- **resilience4j** 2.2.0 → 2.4.0, módulo `resilience4j-spring-boot3` → `resilience4j-spring-boot4` (compatível com Framework 7)
+- **logstash-logback-encoder** 8.0 → 9.0
+- **lombok** 1.18.36 → 1.18.46
+- **archunit** 1.3.0 → 1.4.2
+- **wiremock-standalone** 3.10.0 → 3.13.2
+- **jacoco-maven-plugin** 0.8.12 → 0.8.15
+- **GitHub Actions**: bump do grupo `actions` (checkout v6, setup-java v5, upload/download-artifact v7/v8, codeql-action v4, dorny/test-reporter v3, codecov v6, docker/login v4, attest-build-provenance v4, action-gh-release v3, dependency-review v5)
+- Suíte de testes 21/21 verde no Boot 4
+
 ## [0.1.0] - 2026-04-28
 
 Primeira release pública. Implementação Java de referência para **Transmissor de Dados do Open Insurance Brasil — Phase 2 (Insurance Policies)**.
