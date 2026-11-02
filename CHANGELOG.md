@@ -22,6 +22,19 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 - **GitHub Actions**: bump do grupo `actions` (checkout v6, setup-java v5, upload/download-artifact v7/v8, codeql-action v4, dorny/test-reporter v3, codecov v6, docker/login v4, attest-build-provenance v4, action-gh-release v3, dependency-review v5)
 - Suíte de testes 21/21 verde no Boot 4
 
+## [0.2.0] - 2026-04-30
+
+### Added — FAPI 2.0 + DPoP (RFC 9449)
+
+- Perfil `fapi` protegendo `/open-insurance/insurance-policies/**` com DPoP sender-constrained access tokens (profile que o OPIN herda do FAPI 2.0)
+- `DPoPValidator` — valida `typ`/`alg`/`jwk`/assinatura/`htm`/`htu`/`iat`/`jti`/bind de `cnf.jkt` do proof
+- `DPoPNonceCache` (Caffeine, TTL 2min, até 100k `jti`) — anti-replay
+- `AccessTokenIntrospector` — valida JWT RS256 contra JWKs confiáveis e exige `cnf.jkt`
+- `MockAuthKeystore` + `MockAuthTokenController` (`POST /mock-auth/token`) — emite access token em memória com `cnf.jkt` = thumbprint da chave do receiver, pra exercitar o fluxo sem autorizador real
+- `DPoPAuthenticationFilter` — lê `Authorization: DPoP` + header `DPoP`, introspecta o token e valida o proof; responde 401 com `WWW-Authenticate: DPoP error="..."` em falha
+- `WebSecurityConfig` com dual security chain: `@Profile("!fapi")` preserva o `permitAll` original (suite de IT existente intacta); `@Profile("fapi")` ativa o perfil FAPI nos endpoints de policy
+- 11 testes novos (8 unit em `DPoPValidatorTest`, 3 IT em `FapiE2EIT` — token issuance, request sem headers, replay attack com chave diferente) — suíte sobe de 10 pra 21
+
 ## [0.1.0] - 2026-04-28
 
 Primeira release pública. Implementação Java de referência para **Transmissor de Dados do Open Insurance Brasil — Phase 2 (Insurance Policies)**.
@@ -50,7 +63,7 @@ Primeira release pública. Implementação Java de referência para **Transmisso
 - `GET /open-insurance/insurance-policies/v1/policies?documentType=&document=&page=&page-size=` — paginated, padrão Susep com `data` + `meta` + `links`
 - `GET /open-insurance/insurance-policies/v1/policies/{policyId}` — full detail com taxId mascarado
 - `GlobalExceptionHandler` mapeando `PolicyNotFoundException` → 404, `IllegalArgumentException` → 400
-- Mock auth (Spring Security `permitAll`) — FAPI-CIBA é roadmap v0.2.0
+- Mock auth (Spring Security `permitAll`) — FAPI-CIBA + DCR é roadmap v0.3.0
 
 ### Added — Observabilidade
 
@@ -72,12 +85,12 @@ Primeira release pública. Implementação Java de referência para **Transmisso
 
 ### Roadmap explícito (não nesta release)
 
-- v0.2.0 — FAPI-CIBA + DCR (Dynamic Client Registration)
 - v0.3.0 — Endpoints adicionais Phase 2 (Claim Notifications, Premium history, General info)
 - v0.4.0 — Phase 3 (Resources, Customers, Product catalogs)
 - v0.5.0 — Persistência durável (Postgres com partitioning por categoria)
 - JWS detached signature em payloads
 - Conformance test contra suite oficial Susep
 
-[Unreleased]: https://github.com/Paulo-Marcos-Lucio/open-insurance-transmissor-reference/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Paulo-Marcos-Lucio/open-insurance-transmissor-reference/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Paulo-Marcos-Lucio/open-insurance-transmissor-reference/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Paulo-Marcos-Lucio/open-insurance-transmissor-reference/releases/tag/v0.1.0
