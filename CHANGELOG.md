@@ -78,6 +78,3 @@ Primeira release pública. Implementação Java de referência para **Transmisso
 - v0.5.0 — Persistência durável (Postgres com partitioning por categoria)
 - JWS detached signature em payloads
 - Conformance test contra suite oficial Susep
-
-[Unreleased]: https://github.com/Paulo-Marcos-Lucio/open-insurance-transmissor-reference/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/Paulo-Marcos-Lucio/open-insurance-transmissor-reference/releases/tag/v0.1.0
